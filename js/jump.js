@@ -3,6 +3,8 @@
   const canvas = document.querySelector("#game"), ctx = canvas.getContext("2d");
   const img = src => { const i = new Image(); i.src = src; return i; };
   const dinoSprite = img("img/dino-girl-sprite.png");
+  const ravenImg = img("img/kolkrabe.png");
+  const music = window.DinoMusic;
   const backdrops = {
     park: img("img/night-park-backdrop.png"),
     rhein: img("img/backdrop-rheinufer.png"),
@@ -42,7 +44,7 @@
   let audio = null, sound = true;
   function ensureAudio(){
     if (!sound) return;
-    try { if (!audio) audio = new (window.AudioContext||window.webkitAudioContext)(); if (audio.state === "suspended") audio.resume(); } catch(e){ audio = null; }
+    try { if (!audio) audio = new (window.AudioContext||window.webkitAudioContext)(); if (audio.state === "suspended") audio.resume(); music.init(audio); } catch(e){ audio = null; }
   }
   function tone(f1, f2, dur, type="square", vol=.045, delay=0){
     if (!sound || !audio) return;
@@ -58,6 +60,7 @@
     boing(){ tone(140,700,.22,"triangle",.08); }, splash(){ tone(900,60,.35,"sawtooth",.03); },
     heart(){ [523,659,784].forEach((f,i)=>tone(f,f,.09,"square",.04,i*.07)); },
     boom(){ tone(120,40,.35,"sawtooth",.07); }, bossHit(){ tone(180,90,.18,"square",.07); tone(90,60,.2,"triangle",.07,.05); },
+    krah(){ tone(900,380,.12,"sawtooth",.05); tone(820,300,.17,"sawtooth",.05,.16); },
     win(){ [523,659,784,1047].forEach((f,i)=>tone(f,f,.14,"square",.045,i*.12)); }
   };
 
@@ -65,11 +68,14 @@
   const keys = {}, touch = {left:false,right:false,jump:false,throw:false};
   let L = null, chapterIndex = 0;
   let running=false, paused=false, won=false, camera=0, last=0, collected=0, score=0, deaths=0, checkpoint=100, shake=0, activeZone=0, throwCooldown=0, jumpWasHeld=false;
-  let bgKey="park", prevBgKey=null, bgFade=0, arenaLocked=false, worldTime=0;
+  let rafId=0,bgKey="park", prevBgKey=null, bgFade=0, arenaLocked=false, worldTime=0;
   const player = {x:100,y:300,w:46,h:72,vx:0,vy:0,grounded:false,coyote:0,jumpBuf:0,jumps:0,hp:3,face:1,inv:0,on:null};
   let platforms=[], movers=[], springs=[], crystals=[], hearts=[], enemies=[], hazards=[], total=0;
   const particles=[], projectiles=[], shockwaves=[];
   const boss = {active:false};
+  const raven = {state:"off",x:0,y:0,tx:0,ty:0,t:0,line:"",face:-1};
+  const ravenLines = ["KRAH! GESPEICHERT.","CHECKPOINT. OPEN SOURCE, NATÜRLICH.","HAB'S NOTIERT. MIT TINTE.","KRAH. WEITER SO, DINO!"];
+  let ravenCount = 0, musicOn = true;
   const egg = {active:false,x:0,y:0,vy:0,got:false};
 
   function loadChapter(index){
@@ -99,7 +105,7 @@
 
   function reset(all=true){
     if(all){crystals.forEach(c=>c.got=false);hearts.forEach(h=>h.got=false);enemies.forEach(e=>{e.alive=true;e.x=e.base});collected=0;score=0;deaths=0;checkpoint=L.zones[0].checkpoint}
-    projectiles.length=0;throwCooldown=0;jumpWasHeld=false;
+    projectiles.length=0;throwCooldown=0;jumpWasHeld=false;if(all)raven.state="off";
     if(all||!boss.flee)resetBoss();
     Object.assign(player,{x:checkpoint,y:300,vx:0,vy:0,grounded:false,coyote:0,jumpBuf:0,jumps:0,hp:3,inv:0,on:null});camera=Math.max(0,checkpoint-200);won=false;
     setZone(zoneAt(checkpoint));bgFade=0;updateHud();
@@ -110,14 +116,15 @@
     ["start","win","pause"].forEach(k=>ui[k].classList.add("hidden"));ui.pauseBtn.classList.remove("hidden");
     running=true;paused=false;last=performance.now();canvas.focus();
     if(index===1)setTimeout(()=>toast("EIN EI FEHLT! FOLGE DER SPUR →"),400);
-    requestAnimationFrame(loop);
+    cancelAnimationFrame(rafId);rafId=requestAnimationFrame(loop);
   }
-  function togglePause(force){if(!running||won)return;paused=force??!paused;ui.pause.classList.toggle("hidden",!paused)}
+  function togglePause(force){if(!running||won)return;paused=force??!paused;music.pause(paused);ui.pause.classList.toggle("hidden",!paused)}
   function toast(text){ui.toast.textContent=text;ui.toast.classList.remove("hidden");clearTimeout(toast.t);toast.t=setTimeout(()=>ui.toast.classList.add("hidden"),1300)}
   function updateHud(){ui.crystals.textContent=`${String(collected).padStart(2,"0")} / ${String(total).padStart(2,"0")}`;ui.score.textContent=String(score).padStart(6,"0");ui.hearts.textContent="♥ ".repeat(player.hp).trim()+" ♡ ".repeat(3-player.hp).trim()}
   function setZone(index,announce=false){
     activeZone=index;const z=L.zones[index];ui.zoneName.textContent=z.name;ui.objective.textContent=z.objective;
     if(z.backdrop!==bgKey){prevBgKey=bgKey;bgKey=z.backdrop;bgFade=1}
+    if(z.music)music.play(z.music);
     if(announce)toast(z.name);
   }
   function overlap(a,b){return a.x<b.x+b.w&&a.x+a.w>b.x&&a.y<b.y+b.h&&a.y+a.h>b.y}
@@ -129,7 +136,7 @@
     else{player.vy=-440;player.vx=-player.face*280}
   }
   function win(){
-    won=true;running=false;ui.pauseBtn.classList.add("hidden");sfx.win();
+    won=true;running=false;ui.pauseBtn.classList.add("hidden");music.stop();sfx.win();
     const stats=`Score ${String(score).padStart(6,"0")} · ${collected} von ${total} Münzen`;
     if(chapterIndex===0){
       progress.unlocked=Math.max(progress.unlocked||1,2);store.set(progress);refreshChapterButton();
@@ -150,7 +157,7 @@
     boss.hp--;boss.inv=.7;score+=200;shake=10;burst(boss.x+boss.w/2,boss.y+40,"#fff3d5",20);sfx.bossHit();updateHud();
     if(boss.hp===3&&!boss.angry){boss.angry=true;toast("DER BÄR WIRD SAUER!")}
     if(boss.hp<=0){
-      boss.flee=true;score+=1000;updateHud();toast("DER BÄR TROLLT SICH BELEIDIGT!");
+      boss.flee=true;music.stop();score+=1000;updateHud();toast("DER BÄR TROLLT SICH BELEIDIGT!");
       Object.assign(egg,{active:true,got:false,x:boss.x+boss.w/2,y:boss.y-10,vy:-520});
       shockwaves.length=0;
     }
@@ -179,6 +186,37 @@
     if(overlap(player,boss)){
       if(player.vy>150&&player.y+player.h<boss.y+40){player.vy=-640;damageBoss();sfx.stomp()}
       else hurt();
+    }
+  }
+
+  // ---------------------------------------------------------------- Kolkrabe of Doom
+  function ravenArrive(zone){
+    const sign=L.signs.find(s=>s[0]===zone.start);if(!sign)return;
+    Object.assign(raven,{state:"in",tx:sign[0],ty:280,x:sign[0]+W*.75,y:-90,t:0,face:-1,line:zone.raven||ravenLines[ravenCount++%ravenLines.length]});
+  }
+  function updateRaven(dt){
+    if(raven.state==="off")return;raven.t+=dt;
+    if(raven.state==="in"){
+      const k=Math.min(1,dt*3.2);raven.x+=(raven.tx-raven.x)*k;raven.y+=(raven.ty-raven.y)*k;
+      if(Math.hypot(raven.tx-raven.x,raven.ty-raven.y)<5){Object.assign(raven,{x:raven.tx,y:raven.ty,state:"perch",t:0});sfx.krah();burst(raven.x,raven.y,"#3a4170",8)}
+    }else if(raven.state==="perch"){
+      raven.face=player.x+23<raven.x?-1:1;
+      if(raven.t>2.9){raven.state="out";raven.t=0;sfx.krah()}
+    }else{raven.face=1;raven.x+=280*dt;raven.y-=230*dt;if(raven.y<-160)raven.state="off"}
+  }
+  function drawRaven(){
+    if(raven.state==="off")return;
+    const S=3,FW=46,FH=30,frame=raven.state==="perch"?0:(Math.floor(raven.t*11)%2?1:2);
+    ctx.save();ctx.translate(Math.round(raven.x),Math.round(raven.y));ctx.scale(raven.face,1);ctx.imageSmoothingEnabled=false;
+    ctx.shadowColor="#8fa6ff";ctx.shadowBlur=10;if(ravenImg.complete)ctx.drawImage(ravenImg,frame*FW,0,FW,FH,-22*S,-28*S,FW*S,FH*S);ctx.shadowBlur=0;
+    ctx.restore();ctx.imageSmoothingEnabled=true;
+    if(raven.state==="perch"){
+      ctx.font="13px 'Press Start 2P', monospace";const tw=ctx.measureText(raven.line).width,pad=12,bw=tw+pad*2,bh=36;
+      const pop=Math.min(1,raven.t*6),bx=Math.max(camera+12,Math.min(camera+W-bw-12,raven.x-bw/2)),by=raven.y-98-bh;
+      ctx.save();ctx.globalAlpha=pop;
+      ctx.fillStyle="#120d15";ctx.fillRect(bx-4,by-4,bw+8,bh+8);ctx.fillRect(raven.x-10,by+bh,20,10);
+      ctx.fillStyle="#fff3d5";ctx.fillRect(bx,by,bw,bh);ctx.fillRect(raven.x-6,by+bh,12,6);
+      ctx.fillStyle="#18101a";ctx.fillText(raven.line,bx+pad,by+25);ctx.restore();
     }
   }
 
@@ -235,7 +273,8 @@
     if(feet>surface&&feet-player.vy*dt<=surface&&L.zones[zoneAt(player.x)].gap==="water"){burst(player.x+23,surface,"#9fd3ff",22);sfx.splash()}
 
     const zoneIndex=zoneAt(player.x);
-    if(zoneIndex!==activeZone){const forward=zoneIndex>activeZone;if(forward)checkpoint=L.zones[zoneIndex].checkpoint;setZone(zoneIndex,forward)}
+    if(zoneIndex!==activeZone){const forward=zoneIndex>activeZone;if(forward)checkpoint=L.zones[zoneIndex].checkpoint;setZone(zoneIndex,forward);if(forward)ravenArrive(L.zones[zoneIndex])}
+    updateRaven(dt);
     player.inv=Math.max(0,player.inv-dt);
     hazards.forEach(h=>{if(overlap(player,h))hurt()});
     crystals.forEach(c=>{if(!c.got&&Math.hypot(player.x+23-c.x,player.y+35-c.y)<48){c.got=true;collected++;score+=25;burst(c.x,c.y,"#ffcf45",16);updateHud();sfx.coin()}});
@@ -250,7 +289,7 @@
     // Ziel
     if(L.goal.type==="nest"&&player.x>L.goal.x)win();
     if(L.goal.type==="boss"){
-      if(!boss.active&&!boss.flee&&player.x>L.goal.arena+120){boss.active=true;arenaLocked=true;toast("BOSS · DER GROSSE BÄR");setTimeout(()=>{if(boss.active)boss.awake=true},900)}
+      if(!boss.active&&!boss.flee&&player.x>L.goal.arena+120){boss.active=true;arenaLocked=true;music.play("boss");toast("BOSS · DER GROSSE BÄR");setTimeout(()=>{if(boss.active)boss.awake=true},900)}
       updateBoss(dt);
       shockwaves.forEach(s=>{s.x+=s.vx*dt;s.life-=dt;if(s.life>0&&overlap(player,s))hurt()});
       for(let i=shockwaves.length-1;i>=0;i--)if(shockwaves[i].life<=0)shockwaves.splice(i,1);
@@ -473,7 +512,7 @@
     if(egg.active&&!egg.got)drawEgg(egg.x,egg.y+Math.sin(worldTime*5)*3);
     projectiles.forEach(plushBear);
     if(L.goal.type==="nest")drawNest();
-    drawPlayer();particles.forEach(p=>{ctx.globalAlpha=Math.max(0,p.life);ctx.fillStyle=p.color;ctx.fillRect(p.x,p.y,p.s,p.s)});ctx.globalAlpha=1;
+    drawPlayer();drawRaven();particles.forEach(p=>{ctx.globalAlpha=Math.max(0,p.life);ctx.fillStyle=p.color;ctx.fillRect(p.x,p.y,p.s,p.s)});ctx.globalAlpha=1;
     ctx.restore();
     drawBossBar();
     ctx.restore();
@@ -488,10 +527,10 @@
     ctx.restore();
   }
   function drawNest(){const nx=L.goal.x-20;ctx.save();ctx.translate(nx,535);ctx.fillStyle="#845737";for(let i=0;i<14;i++){ctx.save();ctx.rotate(i*.45);ctx.fillRect(-45,-5,90,10);ctx.restore()}ctx.fillStyle="#fff0bd";ctx.beginPath();ctx.ellipse(-16,0,17,23,-.2,0,7);ctx.ellipse(17,0,17,23,.2,0,7);ctx.fill();ctx.fillStyle="#ff654f";ctx.fillRect(-26,-3,7,6);ctx.fillRect(10,-9,7,6);ctx.restore()}
-  function loop(now){if(!running)return;const dt=Math.min(.033,(now-last)/1000||0);last=now;if(!paused)physics(dt);draw();requestAnimationFrame(loop)}
+  function loop(now){if(!running)return;const dt=Math.min(.033,(now-last)/1000||0);last=now;if(!paused)physics(dt);draw();rafId=requestAnimationFrame(loop)}
 
   // ---------------------------------------------------------------- Eingabe
-  addEventListener("keydown",e=>{keys[e.code]=true;if(["Space","ArrowUp","ArrowDown","ArrowLeft","ArrowRight"].includes(e.code))e.preventDefault();if(e.code==="Escape")togglePause()});
+  addEventListener("keydown",e=>{keys[e.code]=true;if(["Space","ArrowUp","ArrowDown","ArrowLeft","ArrowRight"].includes(e.code))e.preventDefault();if(e.code==="Escape")togglePause();if(e.code==="KeyM"&&!e.repeat){musicOn=!musicOn;music.setEnabled(sound&&musicOn);toast(musicOn?"MUSIK AN":"MUSIK AUS")}});
   addEventListener("keyup",e=>keys[e.code]=false);
   [["leftBtn","left"],["rightBtn","right"],["jumpBtn","jump"],["throwBtn","throw"]].forEach(([id,k])=>{const b=$("#"+id);["pointerdown","pointerenter"].forEach(ev=>b.addEventListener(ev,e=>{e.preventDefault();touch[k]=true}));["pointerup","pointerleave","pointercancel"].forEach(ev=>b.addEventListener(ev,()=>touch[k]=false))});
   $("#startBtn").onclick=()=>start(0);
@@ -500,10 +539,10 @@
   ui.nextBtn.onclick=()=>start(1);
   $("#resumeBtn").onclick=()=>togglePause(false);
   $("#pauseBtn").onclick=()=>togglePause();$("#restartBtn").onclick=()=>{reset(false);togglePause(false)};
-  $("#soundBtn").onclick=()=>{sound=!sound;$("#soundBtn").textContent=sound?"♪":"×";if(sound)ensureAudio()};
+  $("#soundBtn").onclick=()=>{sound=!sound;$("#soundBtn").textContent=sound?"♪":"×";if(sound)ensureAudio();music.setEnabled(sound&&musicOn)};
 
   // Test-Hook für automatisierte Durchläufe, im Spiel ohne Wirkung
-  window.__dino={get state(){return{player,boss,egg,movers,checkpoint,activeZone,won,collected,total,score,chapterIndex,arenaLocked}},start,teleport(x,y=300){player.x=x;player.y=y;player.vx=0;player.vy=0;camera=Math.max(0,x-300)},keys};
+  window.__dino={get state(){return{player,boss,egg,movers,raven,music:music.current,checkpoint,activeZone,won,collected,total,score,chapterIndex,arenaLocked}},start,teleport(x,y=300){player.x=x;player.y=y;player.vx=0;player.vy=0;camera=Math.max(0,x-300)},keys};
 
   loadChapter(0);refreshChapterButton();resetBoss();draw();
 })();

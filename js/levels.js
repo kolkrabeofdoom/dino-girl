@@ -11,7 +11,8 @@
  *   hearts:   [x, y]                        +1 Leben (oder Punkte, wenn voll)
  *   enemies:  [x, typ, reichweite?]         typ 0 Bär, 1 Fuchs, 2 Giraffe, 3 Nilpferd
  *   hazards:  [x, y, breite, höhe]          Stacheln
- *   signs:    [x, "Text"]                   Zonenschilder
+ *   signs:    [x, "Text"]                   Zonenschilder (dort landet der Kolkrabe)
+ *   zone.music: Stück aus js/music.js, zone.raven: eigener Spruch des Raben
  *   decor:    [typ, x]                      reine Deko
  *   goal:     {type:"nest", x} | {type:"boss", arena}
  */
@@ -24,9 +25,9 @@ window.DINO_LEVELS = (() => {
     worldW: 7600,
     enemySpeed: 1,
     zones: [
-      {start:0,end:2240,name:"LEVEL 01 · NACHTPARK",objective:"Erreiche den Dächerweg →",checkpoint:100,sky:["#091563","#132a8e","#171d52"],backdrop:"park",gap:"abyss",style:"brick"},
-      {start:2240,end:4620,name:"LEVEL 02 · DÄCHERWEG",objective:"Überquere die Skyline →",checkpoint:2290,sky:["#10105c","#24207b","#1b1747"],backdrop:"park",gap:"abyss",style:"brick"},
-      {start:4620,end:7600,name:"LEVEL 03 · ALTSTADT",objective:"Rette das Dino-Nest →",checkpoint:4670,sky:["#210d46","#3d175a","#1a1234"],backdrop:"park",gap:"abyss",style:"brick"}
+      {start:0,end:2240,name:"LEVEL 01 · NACHTPARK",music:"park",objective:"Erreiche den Dächerweg →",checkpoint:100,sky:["#091563","#132a8e","#171d52"],backdrop:"park",gap:"abyss",style:"brick"},
+      {start:2240,end:4620,name:"LEVEL 02 · DÄCHERWEG",music:"daecher",objective:"Überquere die Skyline →",checkpoint:2290,sky:["#10105c","#24207b","#1b1747"],backdrop:"park",gap:"abyss",style:"brick"},
+      {start:4620,end:7600,name:"LEVEL 03 · ALTSTADT",music:"altstadt",objective:"Rette das Dino-Nest →",checkpoint:4670,sky:["#210d46","#3d175a","#1a1234"],backdrop:"park",gap:"abyss",style:"brick"}
     ],
     ground: [[0,620],[760,520],[1420,680],[2240,370],[2740,520],[3380,340],[3840,650],[4620,430],[5180,520],[5840,330],[6310,430],[6880,720]],
     floats: [
@@ -53,10 +54,10 @@ window.DINO_LEVELS = (() => {
     enemySpeed: 1.15,
     oneWayFloats: true, // schwebende Plattformen von unten durchspringbar
     zones: [
-      {start:0,end:3200,name:"LEVEL 04 · RHEINUFER",objective:"Folge der Spur am Fluss →",checkpoint:100,sky:["#081a6e","#0f2b8c","#0a1747"],backdrop:"rhein",gap:"water",style:"quay"},
-      {start:3200,end:6400,name:"LEVEL 05 · KIRMES",objective:"Quer über den Rummel →",checkpoint:3250,sky:["#140f5e","#2b1f80","#1a1447"],backdrop:"kirmes",gap:"abyss",style:"brick"},
-      {start:6400,end:8620,name:"LEVEL 06 · BAUSTELLE",objective:"Hoch hinaus über die Kräne →",checkpoint:6450,sky:["#0d1560","#1d2a85","#141a45"],backdrop:"bau",gap:"abyss",style:"girder"},
-      {start:8620,end:9900,name:"FINALE · KRANPLATZ",objective:"Hol das Ei zurück!",checkpoint:8680,sky:["#1e0c3e","#3a1554","#170f30"],backdrop:"bau",gap:"abyss",style:"girder"}
+      {start:0,end:3200,name:"LEVEL 04 · RHEINUFER",music:"rhein",objective:"Folge der Spur am Fluss →",checkpoint:100,sky:["#081a6e","#0f2b8c","#0a1747"],backdrop:"rhein",gap:"water",style:"quay"},
+      {start:3200,end:6400,name:"LEVEL 05 · KIRMES",music:"kirmes",objective:"Quer über den Rummel →",checkpoint:3250,sky:["#140f5e","#2b1f80","#1a1447"],backdrop:"kirmes",gap:"abyss",style:"brick"},
+      {start:6400,end:8620,name:"LEVEL 06 · BAUSTELLE",music:"bau",objective:"Hoch hinaus über die Kräne →",checkpoint:6450,sky:["#0d1560","#1d2a85","#141a45"],backdrop:"bau",gap:"abyss",style:"girder"},
+      {start:8620,end:9900,name:"FINALE · KRANPLATZ",raven:"BÄR VORAUS. ICH BIN RAUS!",music:"bau",objective:"Hol das Ei zurück!",checkpoint:8680,sky:["#1e0c3e","#3a1554","#170f30"],backdrop:"bau",gap:"abyss",style:"girder"}
     ],
     ground: [
       [0,620],[780,420],[1500,500],[2260,420],[2860,340],
