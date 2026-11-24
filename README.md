@@ -27,7 +27,7 @@ Auf Touch-Geräten stehen Bildschirmtasten einschließlich einer `BÄR`-Taste be
 
 **Kapitel 1 · Nachtpark** – Nachtpark, Dächerweg, Altstadt. Am Ende wartet das Dino-Nest.
 
-**Kapitel 2 · Das verschwundene Ei** – wird nach Kapitel 1 freigeschaltet (oder direkt über `?kapitel=2`):
+**Kapitel 2 · Das verschwundene Ei** – wird nach Kapitel 1 freigeschaltet (oder direkt über `?kapitel=2` bzw. `#kapitel-2`):
 
 - **Level 04 · Rheinufer** – Kaimauern, Wasser statt Abgrund, Boote als bewegte Plattformen
 - **Level 05 · Kirmes** – Trampoline, Riesenrad-Gondel, Lichterketten

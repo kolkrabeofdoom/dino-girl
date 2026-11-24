@@ -31,7 +31,7 @@
     set(v){ try { localStorage.setItem("dinoGirl.progress", JSON.stringify(v)); } catch(e){} }
   };
   let progress = store.get();
-  if (new URLSearchParams(location.search).get("kapitel") === "2") progress.unlocked = Math.max(progress.unlocked||1, 2);
+  if (new URLSearchParams(location.search).get("kapitel") === "2" || location.hash === "#kapitel-2") progress.unlocked = Math.max(progress.unlocked||1, 2);
   function refreshChapterButton(){
     const open = (progress.unlocked||1) >= 2;
     ui.chapter2Btn.disabled = !open;
