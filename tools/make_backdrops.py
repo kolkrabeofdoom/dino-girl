@@ -245,7 +245,182 @@ def baustelle():
     finish(img, "backdrop-baustelle.png")
 
 
+# --------------------------------------------------------------- Weinberge
+def weinberge():
+    img = Image.new("RGB", (W, H))
+    d = ImageDraw.Draw(img)
+    base_sky(d, 17)
+    d.ellipse([228, 16, 244, 32], fill=(255, 236, 170))
+    # ferner Hang mit Burg
+    for x in range(W):
+        h = 70 + int(12 * math.sin(x / W * 2 * math.pi) + 5 * math.sin(x / W * 2 * math.pi * 4))
+        d.line([(x, h), (x, H)], fill=CITY_FAR)
+    bx = 196
+    d.rectangle([bx, 46, bx + 22, 66], fill=CITY)
+    d.rectangle([bx + 14, 34, bx + 22, 46], fill=CITY)
+    for tx in range(bx + 14, bx + 23, 3):
+        d.rectangle([tx, 31, tx + 1, 33], fill=CITY)
+    d.rectangle([bx + 17, 38, bx + 18, 40], fill=WIN[0]); d.rectangle([bx + 5, 54, bx + 6, 56], fill=WIN[0])
+    # naher Weinberg mit Rebzeilen
+    for x in range(W):
+        h = 92 + int(14 * math.sin(x / W * 2 * math.pi * 2 + 2))
+        d.line([(x, h), (x, H)], fill=(4, 22, 40))
+    for row in range(0, 60, 6):
+        for x in range(0, W, 2):
+            h = 92 + int(14 * math.sin(x / W * 2 * math.pi * 2 + 2)) + 4 + row
+            if h < 150 and (x // 2 + row) % 3:
+                d.point((x, h), fill=(34, 74, 18) if (x + row) % 5 else (70, 40, 110))
+    # Fluss
+    d.rectangle([0, 146, W, H], fill=(1, 18, 92))
+    rnd = random.Random(3)
+    for y in range(148, 170, 3):
+        for _ in range(7):
+            x = rnd.randrange(W)
+            wrap_rect(d, x, y, x + rnd.randrange(2, 6), y, WIN[0] if rnd.random() < .4 else (60, 90, 190))
+    finish(img, "backdrop-weinberge.png")
+
+
+# ----------------------------------------------------------- Kneipenviertel
+def kneipen():
+    img = Image.new("RGB", (W, H))
+    d = ImageDraw.Draw(img)
+    base_sky(d, 23)
+    skyline(d, 41, 90, CITY_FAR, lit=.2, hmin=10, hmax=30)
+    rnd = random.Random(5)
+    x = 0
+    timber = (26, 14, 12)
+    while x < W:
+        w = rnd.randrange(34, 50)
+        top = rnd.randrange(66, 88)
+        wall = rnd.choice([(58, 46, 46), (50, 42, 58), (62, 52, 40)])
+        wrap_rect(d, x, top, x + w, 150, wall)
+        for i in range(w // 2 + 3):  # Dach
+            wrap_rect(d, x - 2 + i, top - i // 1, x + w + 2 - i, top - i // 1, (36, 20, 30))
+            if x + w + 2 - i <= x - 2 + i:
+                break
+        for fy in range(top, 150, 14):  # Fachwerk
+            wrap_rect(d, x, fy, x + w, fy + 1, timber)
+            for fx in range(x, x + w, 10):
+                wrap_rect(d, fx, fy, fx + 1, fy + 14, timber)
+                for k in range(10):
+                    if fy + k < 150:
+                        d.point(((fx + k) % W, fy + k), fill=timber)
+        for fy in range(top + 4, 140, 14):
+            for fx in range(x + 4, x + w - 5, 10):
+                if rnd.random() < .42:
+                    wrap_rect(d, fx, fy, fx + 4, fy + 5, WIN[0] if rnd.random() < .8 else WIN[1])
+                    wrap_rect(d, fx + 2, fy, fx + 2, fy + 5, timber)
+        if rnd.random() < .6:  # Wirtshausschild
+            sx = x + w - 2
+            wrap_rect(d, sx, top + 20, sx + 8, top + 20, timber)
+            wrap_rect(d, sx + 3, top + 21, sx + 9, top + 27, (200, 150, 60))
+        x += w + 1
+    d.rectangle([0, 150, W, H], fill=(30, 28, 40))
+    for y in range(152, H, 4):
+        for x in range((y // 4 % 2) * 3, W, 6):
+            d.rectangle([x, y, x + 4, y + 2], fill=(46, 42, 58))
+    finish(img, "backdrop-kneipen.png")
+
+
+# ---------------------------------------------------------------- Burg
+def burg():
+    img = Image.new("RGB", (W, H))
+    d = ImageDraw.Draw(img)
+    base_sky(d, 29)
+    d.ellipse([96, 16, 118, 38], fill=(255, 236, 170))
+    stone, stone2, dark = (44, 46, 72), (58, 60, 92), (20, 22, 40)
+    d.rectangle([0, 78, W, H], fill=stone)
+    for y in range(78, H, 8):  # Mauerwerk
+        for x in range((y // 8 % 2) * 8, W, 16):
+            d.rectangle([x, y, x + 14, y + 6], fill=stone2)
+    for x in range(0, W, 12):  # Zinnen
+        d.rectangle([x, 70, x + 7, 78], fill=stone)
+    for tx in (30, 150, 262):  # Türme
+        d.rectangle([tx, 36, tx + 34, 150], fill=stone)
+        for x in range(tx, tx + 34, 9):
+            d.rectangle([x, 28, x + 5, 36], fill=stone)
+        for y in range(40, 150, 8):
+            d.line([(tx, y), (tx + 34, y)], fill=dark)
+        d.rectangle([tx + 14, 52, tx + 19, 62], fill=WIN[0])
+        d.rectangle([tx + 14, 90, tx + 19, 100], fill=dark)
+        d.line([(tx + 17, 10), (tx + 17, 28)], fill=dark)
+        d.polygon([(tx + 18, 10), (tx + 30, 14), (tx + 18, 18)], fill=(180, 40, 50))
+    for fx in (90, 210):  # Fackeln
+        d.rectangle([fx, 104, fx + 2, 114], fill=(60, 30, 20))
+        d.rectangle([fx - 1, 100, fx + 3, 104], fill=(255, 170, 60))
+        d.point((fx + 1, 99), fill=(255, 240, 160))
+        for r in range(6, 14, 3):
+            for a in range(0, 360, 30):
+                px = fx + 1 + int(r * math.cos(math.radians(a)))
+                py = 102 + int(r * math.sin(math.radians(a)))
+                if (px + py) % 2 == 0:
+                    d.point((px, py), fill=(120, 80, 70))
+    d.rectangle([0, 150, W, H], fill=dark)
+    finish(img, "backdrop-burg.png")
+
+
+# ---------------------------------------------------------------- Serverraum
+def serverraum():
+    img = Image.new("RGB", (W, H))
+    d = ImageDraw.Draw(img)
+    d.rectangle([0, 0, W, H], fill=(4, 10, 40))
+    for y in range(0, 30, 6):  # Kabeltrassen an der Decke
+        d.rectangle([0, y + 4, W, y + 6], fill=(14, 22, 62))
+    for x in range(0, W, 7):
+        d.line([(x, 10), (x + 3, 26)], fill=(30, 40, 90))
+    rnd = random.Random(8)
+    leds = [(90, 255, 140), (90, 200, 255), (255, 190, 70), (255, 70, 70)]
+    for depth, (top, col, step) in enumerate(((40, (10, 18, 58), 26), (52, (16, 26, 74), 34))):
+        for x in range(depth * 10, W, step):
+            w = step - 6
+            d.rectangle([x, top, x + w, 150], fill=col)
+            d.rectangle([x, top, x + w, top + 2], fill=(34, 46, 110))
+            for y in range(top + 6, 146, 4):
+                d.line([(x + 2, y), (x + w - 2, y)], fill=(6, 12, 40))
+                if rnd.random() < .5:
+                    d.point((x + 3 + rnd.randrange(max(1, w - 6)), y + 1), fill=rnd.choice(leds))
+    for x in range(0, W, 16):  # Bodenlicht
+        d.rectangle([x, 150, x + 8, 151], fill=(60, 120, 220))
+    d.rectangle([0, 152, W, H], fill=(8, 14, 44))
+    for x in range(0, W, 20):
+        d.line([(x, 152), (x, H)], fill=(18, 26, 70))
+    finish(img, "backdrop-serverraum.png")
+
+
+# ---------------------------------------------------------------- Rauschen
+def rauschen():
+    img = Image.new("RGB", (W, H))
+    d = ImageDraw.Draw(img)
+    bands = [(6, 4, 30), (14, 8, 52), (24, 12, 70), (18, 30, 80), (10, 40, 70)]
+    for y in range(H):
+        i = min(len(bands) - 1, y * len(bands) // H)
+        d.line([(0, y), (W, y)], fill=bands[i])
+        if i + 1 < len(bands) and (y * len(bands)) % H > H * .6:
+            for x in range(y % 2, W, 2):
+                d.point((x, y), fill=bands[i + 1])
+    rnd = random.Random(42)
+    for _ in range(140):
+        x, y = rnd.randrange(W), rnd.randrange(120)
+        d.point((x, y), fill=rnd.choice([STAR, (180, 200, 255), (200, 160, 255)]))
+    for x in range(W):  # Polarlicht
+        y0 = 40 + int(14 * math.sin(x / W * 2 * math.pi * 2) + 6 * math.sin(x / W * 2 * math.pi * 5))
+        for k in range(0, 24, 2):
+            if (x + k) % 3:
+                d.point((x, y0 + k), fill=(40, 180 - k * 4, 150 - k * 2))
+    d.ellipse([140, 70, 180, 110], fill=(230, 220, 255))
+    d.ellipse([146, 76, 156, 84], fill=(200, 190, 240))
+    for x in range(W):
+        h = 130 + int(8 * math.sin(x / W * 2 * math.pi * 3))
+        d.line([(x, h), (x, H)], fill=(8, 6, 26))
+    finish(img, "backdrop-rauschen.png")
+
+
 if __name__ == "__main__":
     rheinufer()
     kirmes()
     baustelle()
+    weinberge()
+    kneipen()
+    burg()
+    serverraum()
+    rauschen()

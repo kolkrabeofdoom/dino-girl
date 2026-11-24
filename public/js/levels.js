@@ -9,12 +9,16 @@
  *   springs:  [x]                           Trampoline auf dem Boden
  *   coins:    [x, y]
  *   hearts:   [x, y]                        +1 Leben (oder Punkte, wenn voll)
- *   enemies:  [x, typ, reichweite?]         typ 0 Bär, 1 Fuchs, 2 Giraffe, 3 Nilpferd
+ *   enemies:  [x, typ, reichweite?]         typ 0 Bär, 1 Fuchs, 2 Giraffe, 3 Nilpferd, 4 Bug
  *   hazards:  [x, y, breite, höhe]          Stacheln
  *   signs:    [x, "Text"]                   Zonenschilder (dort landet der Kolkrabe)
  *   zone.music: Stück aus js/music.js, zone.raven: eigener Spruch des Raben
  *   decor:    [typ, x]                      reine Deko
- *   goal:     {type:"nest", x} | {type:"boss", arena}
+ *   updrafts: [x, breite, obergrenze]       Lüfter-Aufwind (Kapitel 4)
+ *   tvs:      [x, y, "ziel"]                Rausch-Fernseher: "bonus" = Geheimlevel, "zurueck" = Ausgang
+ *   goal:     {type:"nest", x} | {type:"boss", arena, bossX} | {type:"flag", x, y}
+ *             | {type:"dragon", arena, bossX} | {type:"exit"}
+ *   win:      Texte für den Siegerbildschirm
  */
 window.DINO_LEVELS = (() => {
   const ground = 610;
@@ -44,7 +48,9 @@ window.DINO_LEVELS = (() => {
     hazards: [[1180,590,60,20],[2450,590,60,20],[3510,590,70,20],[4150,590,70,20],[4810,590,60,20],[5480,590,70,20],[5960,590,60,20],[7040,590,70,20]],
     signs: [[2240,"02"],[4620,"03"]],
     decor: Array.from({length:6},(_,i)=>["bench",640+i*1280]),
-    goal: {type:"nest", x:7480}
+    tvs: [[4080,305,"bonus"]],
+    goal: {type:"nest", x:7480},
+    win: {eyebrow:"DAS NEST IST GERETTET!", title:"SAURIER-STARK!", text:"Moment mal … waren da nicht drei Eier?"}
   };
 
   const kapitel2 = {
@@ -97,8 +103,154 @@ window.DINO_LEVELS = (() => {
       ...[3300,3700,4000,4350,4650,5100,5450,5750,6050,6350].map(x=>["pole",x]),
       ...[6450,6740,7030,7680,8220,8560].map(x=>["bake",x])
     ],
-    goal: {type:"boss", arena:8620, bossX:9500}
+    goal: {type:"boss", arena:8620, bossX:9500, name:"DER GROSSE BÄR"},
+    hatch: true,
+    win: {eyebrow:"DAS EI IST ZURÜCK IM NEST!", title:"DINO-MÄSSIG!", text:"Der Kleine ist geschlüpft und begleitet dich ab Kapitel 3."}
   };
 
-  return {ground, chapters:[kapitel1, kapitel2]};
+  const kapitel3 = {
+    id: 3,
+    title: "KAPITEL 3 · DIE LAHN HINAUF",
+    worldW: 9600,
+    enemySpeed: 1.2,
+    oneWayFloats: true,
+    companion: true,
+    zones: [
+      {start:0,end:3200,name:"LEVEL 07 · WEINBERGE",music:"weinberge",objective:"Durch die Reben, die Lahn hinauf →",checkpoint:100,sky:["#081a6e","#10298a","#0a1747"],backdrop:"weinberge",gap:"water",style:"crate"},
+      {start:3200,end:6200,name:"LEVEL 08 · KNEIPENVIERTEL",music:"kneipe",objective:"Quer durchs Kneipenviertel →",checkpoint:3250,sky:["#0d1460","#1e2a84","#141a45"],backdrop:"kneipen",gap:"abyss",style:"cobble",raven:"EINE APFELSCHORLE, BITTE. KRAH."},
+      {start:6200,end:9600,name:"LEVEL 09 · BURG LAHNECK",music:"burg",objective:"Hiss die Fahne auf dem Turm!",checkpoint:6250,sky:["#140c4a","#26196e","#120f36"],backdrop:"burg",gap:"abyss",style:"castle",raven:"DIE BURG. ICH WAR SCHON OBEN. ANGEBER."}
+    ],
+    ground: [
+      [0,700],[860,440],[1460,520],[2160,380],[2700,500],
+      [3200,560],[3920,480],[4560,560],[5280,420],[5860,340],
+      [6200,440],[6820,360],[7360,440],[7980,300],[8460,1140]
+    ],
+    floats: [
+      [300,500,150],[520,400,140],[760,470,120],[1440,260,150],[1580,480,150],[1800,390,150],[2020,300,140],[2220,480,150],[2440,380,140],[2570,250,150],[2760,480,150],[2980,390,150],
+      [3400,490,150],[3620,380,140],[3780,470,110],[4000,400,150],[4220,310,150],[4420,450,110],[4700,480,150],[4900,370,150],[5130,470,120],[5400,380,150],[5620,280,150],[5900,470,150],[6050,370,140],
+      [6300,490,140],[6500,380,140],[6680,470,110],[6900,390,140],[7100,300,140],[7400,480,140],[7600,380,140],[7820,470,120],[8000,380,140],[8200,290,140],[8500,480,140],[8700,380,140],[8900,280,140],[9100,190,160],[9380,200,180]
+    ],
+    movers: [
+      {x:1000,y:560,w:140,dx:280,dy:-250,speed:.6,style:"seilbahn"},
+      {x:7200,y:560,w:120,dx:0,dy:-240,speed:.9,style:"korb"}
+    ],
+    springs: [2470,5520],
+    coins: [
+      [370,450],[585,350],[820,420],[1080,500],[1180,430],[1280,360],[1515,210],[1650,430],[1870,340],[2090,250],[2290,430],[2505,330],[2640,200],[2830,430],[3050,340],
+      [3475,440],[3690,330],[3835,420],[4075,350],[4475,400],[4775,430],[4975,320],[5190,420],[5475,330],[5695,230],[5760,230],[5975,420],[6120,320],
+      [6370,440],[6570,330],[6735,420],[6970,340],[7260,480],[7260,380],[7470,430],[7670,330],[7880,420],[8070,330],[8270,240],[8570,430],[8770,330],[8970,230],[9180,140],[9300,560],[9540,560]
+    ],
+    hearts: [[1580,210],[4295,260],[7170,250]],
+    enemies: [
+      [1100,1],[1600,3],[2300,0],[2850,2],
+      [3450,1],[4100,2],[4700,3],[4950,0],[5450,1],[6000,3],
+      [6350,0],[6950,2],[7450,1],[7650,3],[8100,0],[8600,1],[8950,2],[9300,3]
+    ],
+    hazards: [[1880,590,60,20],[3100,590,60,20],[3700,590,50,20],[4300,590,60,20],[5650,590,40,20],[6550,590,60,20],[7700,590,60,20],[8750,590,70,20],[9150,590,70,20]],
+    signs: [[3200,"08"],[6200,"09"]],
+    decor: [
+      ...[150,550,980,1200,1650,2300,2800,3100].map(x=>["fass",x]),
+      ...[3350,3900,4600,5300,5900].map(x=>["lamp",x]),
+      ...[6300,6900,7500,8100,8600,9200].map(x=>["fackel",x])
+    ],
+    goal: {type:"flag", x:9470, y:200},
+    win: {eyebrow:"DIE FAHNE WEHT ÜBER LAHNECK!", title:"TURM-T-REX!", text:"Und der Kleine hat kein einziges Mal geweint. Fast."}
+  };
+
+  const kapitel4 = {
+    id: 4,
+    title: "KAPITEL 4 · SERVERRAUM",
+    worldW: 9400,
+    enemySpeed: 1.25,
+    oneWayFloats: true,
+    companion: true,
+    zones: [
+      {start:0,end:3400,name:"LEVEL 10 · RECHENZENTRUM",music:"server",objective:"Finde den Helpdesk →",checkpoint:100,sky:["#040a28","#081446","#040a28"],backdrop:"server",gap:"abyss",style:"rack"},
+      {start:3400,end:6600,name:"LEVEL 11 · KÜHLGANG",music:"kuehl",objective:"Lass dich von den Lüftern tragen →",checkpoint:3450,sky:["#04122e","#0a2050","#04122e"],backdrop:"server",gap:"fan",style:"rack",raven:"HAST DU'S MAL AUS- UND WIEDER EINGESCHALTET?"},
+      {start:6600,end:8120,name:"LEVEL 12 · KABELSALAT",music:"server",objective:"Bugs fixen, bevor sie sich vermehren!",checkpoint:6650,sky:["#0a0a30","#16124e","#0a0a30"],backdrop:"server",gap:"abyss",style:"rack",raven:"TICKET #4711: DINO ZU SCHNELL. GESCHLOSSEN."},
+      {start:8120,end:9400,name:"FINALE · HELPDESK",music:"server",objective:"Schließ das Ticket!",checkpoint:8170,sky:["#1a0830","#30104e","#1a0830"],backdrop:"server",gap:"abyss",style:"rack",raven:"DRACHE AM TELEFON. ICH BIN IN DER MITTAGSPAUSE."}
+    ],
+    ground: [
+      [0,640],[800,480],[1440,560],[2160,420],[2760,640],
+      [3400,520],[4240,480],[5100,560],[5900,700],
+      [6600,420],[7180,380],[7720,400],
+      [8120,1280]
+    ],
+    floats: [
+      [300,500,140],[520,400,140],[700,470,110],[950,380,140],[1150,290,140],[1500,480,140],[1720,380,140],[1900,470,110],[2250,480,140],[2450,380,140],[2620,470,120],[2900,400,140],[3150,300,140],
+      [3550,480,140],[3780,380,120],[4040,200,160],[4400,470,140],[4580,370,120],[4840,220,140],[5250,480,140],[5450,380,140],[5700,470,140],[6050,480,140],[6300,380,140],
+      [6700,480,140],[6900,380,140],[7050,470,110],[7250,380,140],[7450,290,140],[7600,460,100],[7800,480,140],[7980,380,120],
+      [8300,450,170],[8650,330,170],[9000,450,170]
+    ],
+    movers: [],
+    springs: [1000],
+    updrafts: [[3920,320,170],[4720,380,170]],
+    coins: [
+      [370,450],[590,350],[755,420],[1020,330],[1220,240],[1570,430],[1790,330],[1955,420],[2320,430],[2520,330],[2680,420],[2970,350],[3220,250],
+      [3620,430],[3840,330],[3990,420],[4060,300],[4120,150],[4180,300],[4470,420],[4640,320],[4800,420],[4910,170],[4980,420],[5320,430],[5520,330],[5770,420],[6120,430],[6370,330],
+      [6770,430],[6970,330],[7110,420],[7320,330],[7520,240],[7650,410],[7870,430],[8040,330],
+      [8385,400],[9085,400]
+    ],
+    hearts: [[4120,110],[7450,240],[8735,280]],
+    enemies: [
+      [900,4],[1600,1],[2300,4],[2900,3],
+      [3600,4],[4400,0],[5250,4],[5450,2],[6100,4],[6350,1],
+      [6800,4],[7300,3],[7850,4]
+    ],
+    hazards: [[1180,590,50,20],[2520,590,60,20],[3700,590,60,20],[5520,590,60,20],[6950,590,60,20]],
+    signs: [[3400,"11"],[6600,"12"],[8120,"??"]],
+    decor: [
+      ...[200,1000,1700,2400,3000].map(x=>["kabel",x]),
+      ...[3600,4400,5300,6100].map(x=>["kabel",x]),
+      ...[6700,7300,7900].map(x=>["kabel",x])
+    ],
+    goal: {type:"dragon", arena:8120, bossX:9050, name:"DER DAU-DRACHE"},
+    win: {eyebrow:"TICKET GESCHLOSSEN!", title:"FEIERABEND!", text:"Der DAU-Drache ruft morgen nochmal an. Bis dahin: Kaffee."}
+  };
+
+  const bonus = {
+    id: 5,
+    bonus: true,
+    title: "BONUS · RAUSCHEN",
+    worldW: 4300,
+    enemySpeed: 1,
+    oneWayFloats: true,
+    zones: [
+      {start:0,end:4300,name:"BONUS · RAUSCHEN",music:"rauschen",objective:"Einfach mal treiben lassen …",checkpoint:120,sky:["#06041e","#160c40","#0a2840"],backdrop:"rauschen",gap:"abyss",style:"neon"}
+    ],
+    ground: [[0,520],[660,300],[1120,400],[1680,300],[2120,520],[2780,300],[3240,1060]],
+    floats: [
+      [420,470,120],[560,370,120],[700,270,120],[980,440,120],[1290,360,140],[1520,470,120],[1560,280,120],[1820,380,140],[2000,280,120],
+      [2340,470,120],[2500,370,120],[2660,270,120],[2900,420,120],[3080,320,120],[3400,470,120],[3600,370,120],[3800,270,120]
+    ],
+    movers: [],
+    springs: [2240],
+    coins: [
+      ...[0,1,2,3,4].map(i=>[220+i*60,520-Math.sin(i/4*Math.PI)*90]),
+      [480,420],[620,320],[760,220],[1040,390],[1360,310],[1580,420],[1620,230],[1890,330],[2060,230],
+      ...[0,1,2,3,4,5].map(i=>[2200+i*28,520-i*60]),
+      [2400,420],[2560,320],[2720,220],[2960,370],[3140,270],[3460,420],[3660,320],[3860,220],
+      ...[0,1,2,3,4,5,6].map(i=>[3300+i*80,560])
+    ],
+    hearts: [],
+    enemies: [],
+    hazards: [],
+    signs: [[260,"??"]],
+    decor: [],
+    tvs: [[4100,610,"zurueck"]],
+    ravenStart: {x:260,line:"PSST. HIER WAR NIE JEMAND."},
+    goal: {type:"exit"},
+    win: {eyebrow:"DAS RAUSCHEN IST VORBEI", title:"GANZ ENTSPANNT.", text:"Die Münzen aus dem Bonuslevel liegen schon im Laden-Konto."}
+  };
+
+  // Eigenes Level aus dem Editor (localStorage), falls vorhanden
+  let custom = null;
+  try {
+    const raw = localStorage.getItem("dinoGirl.customLevel");
+    if (raw) { custom = JSON.parse(raw); custom.id = 6; custom.custom = true; custom.title = custom.title || "EIGENES LEVEL"; }
+  } catch(e) { custom = null; }
+
+  const chapters = [kapitel1, kapitel2, kapitel3, kapitel4, bonus];
+  if (custom) chapters.push(custom);
+  return {ground, chapters, story:[kapitel1, kapitel2, kapitel3, kapitel4]};
 })();
