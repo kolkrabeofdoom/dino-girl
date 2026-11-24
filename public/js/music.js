@@ -126,11 +126,43 @@ window.DinoMusic = (() => {
       lead:[0,0,0,0, 0,0,0,0, 76,"-","-","-", "-","-","-","-",  0,0,0,0, 0,0,0,0, 72,"-","-","-", "-","-","-","-",
             0,0,0,0, 0,0,0,0, 79,"-","-","-", "-","-","-","-",  0,0,0,0, 0,0,0,0, 74,"-","-","-", 71,"-","-","-"],
       kick:bar("................"), snare:bar("................"), hat:bar("................"), arpVol:.024, soft:true
+    },
+    jagd: { // Kapitel 5: Verfolgungsjagd auf der B42
+      bpm:156, chords:[[52,"m"],[48,"M"],[50,"M"],[47,"7"]],
+      arp:[0,2,4,2,0,2,4,6,0,2,4,2,1,3,5,7],
+      bass:bar("0.0. 0.07 0.0. 0.07"),
+      lead:[76,"-",79,"-", 83,"-",79,"-", 76,"-",74,"-", 72,"-",74,"-",  76,"-","-","-", 79,"-",81,"-", 79,"-",76,"-", 72,"-","-","-",
+            74,"-",78,"-", 81,"-",78,"-", 74,"-",72,"-", 71,"-",74,"-",  75,"-","-","-", 78,"-",81,"-", 83,"-","-","-", 0,0,0,0],
+      kick:bar("x... x..x x... x..."), snare:bar(".... x... .... x.x."), hat:bar("x.x. x.x. x.x. x.xx"), arpVol:.016
+    },
+    tunnel: { // Kapitel 5: hallender Tunnel
+      bpm:156, chords:[[45,"m"],[45,"m"],[46,"M"],[44,"d"]],
+      arp:[0,4,0,4,1,5,1,5,2,6,2,6,1,5,1,5],
+      bass:bar("0000 0000 0000 0000"),
+      lead:[0,0,0,0, 0,0,0,0, 81,"-","-","-", 80,"-","-","-",  0,0,0,0, 0,0,0,0, 81,"-","-","-", 82,"-","-","-",
+            0,0,0,0, 0,0,0,0, 84,"-","-","-", 82,"-","-","-",  81,"-","-","-", 80,"-","-","-", 76,"-","-","-", 0,0,0,0],
+      kick:bar("x... x... x... x..."), snare:bar(".... .... .... x..."), hat:bar("..x. ..x. ..x. ..x."), arpVol:.016
+    },
+    disko: { // Kapitel 6: four-on-the-floor mit Berlin-School-Motor
+      bpm:124, chords:[[45,"m"],[48,"M"],[43,"M"],[50,"m"]],
+      arp:[0,2,4,2,5,2,4,2,0,2,4,2,6,4,2,4],
+      bass:bar("..0. ..0. ..0. ..07"),
+      lead:[76,"-","-","-", 0,0,72,"-", 74,"-",76,"-", 0,0,79,"-",  0,0,0,0, 76,"-",74,"-", 72,"-","-","-", 0,0,0,0,
+            74,"-","-","-", 0,0,71,"-", 72,"-",74,"-", 0,0,77,"-",  76,"-","-","-", 74,"-",72,"-", 69,"-","-","-", 0,0,0,0],
+      kick:bar("x... x... x... x..."), snare:bar(".... x... .... x..."), hat:bar("..x. ..x. ..x. ..x."), arpVol:.017
+    },
+    dj: { // Finale Kapitel 6: der Kolkrabe legt auf
+      bpm:128, chords:[[45,"m"],[41,"M"],[48,"M"],[43,"M"]],
+      arp:[0,4,1,5,2,6,3,7,0,4,1,5,2,6,3,7],
+      bass:bar("..0. ..0. ..0. 0.0."),
+      lead:[81,"-",79,"-", 76,"-",79,"-", 81,"-","-","-", 84,"-",81,"-",  77,"-",76,"-", 72,"-",76,"-", 77,"-","-","-", 81,"-",77,"-",
+            79,"-",76,"-", 72,"-",76,"-", 79,"-","-","-", 84,"-",79,"-",  74,"-",76,"-", 79,"-",83,"-", 86,"-","-","-", 0,0,0,0],
+      kick:bar("x... x... x... x..."), snare:bar(".... x... .... x..x"), hat:bar(".xx. .xx. .xx. .xxx"), arpVol:.017
     }
   };
 
   let ac = null, out = null, noise = null, timer = null;
-  let current = null, step = 0, nextTime = 0, enabled = true, paused = false, sid = false;
+  let current = null, step = 0, nextTime = 0, enabled = true, paused = false, sid = false, startAt = 0;
   const hz = m => 440 * Math.pow(2, (m - 69) / 12);
 
   function init(audioCtx){
@@ -176,13 +208,15 @@ window.DinoMusic = (() => {
     tracks, init,
     play(name){
       if (!tracks[name] || current === name) return;
-      current = name; step = 0; if (ac) nextTime = ac.currentTime + .06;
+      current = name; step = 0; if (ac) { nextTime = ac.currentTime + .06; startAt = nextTime; }
       if (!timer) timer = setInterval(tick, 25);
     },
     stop(){ current = null; },
     pause(v){ paused = v; if (!v && ac) nextTime = ac.currentTime + .05; },
     setEnabled(v){ enabled = v; if (v && ac) nextTime = ac.currentTime + .05; },
     setSid(v){ sid = v; },
+    // Taktuhr: Schläge seit Start des laufenden Stücks (null, wenn kein Audio läuft)
+    beat(){ return ac && current && enabled ? (ac.currentTime - startAt) * tracks[current].bpm / 60 : null; },
     get enabled(){ return enabled; },
     get current(){ return current; }
   };

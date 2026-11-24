@@ -40,7 +40,9 @@
           <div id="chapterList" class="chapter-list" aria-label="Kapitelauswahl"></div>
           <div class="menu-row">
             <button class="secondary-btn open-shop">EICHHÖRNCHEN-LADEN</button>
+            <button class="secondary-btn open-album">STICKER-ALBUM</button>
             <button class="secondary-btn c64-toggle">C64-MODUS: AUS</button>
+            <button class="secondary-btn kids-toggle">KINDER-MODUS: AUS</button>
             <a class="secondary-btn" href="editor.html">LEVEL-EDITOR</a>
           </div>
           <p id="walletInfo" class="wallet-info"></p>
@@ -52,6 +54,7 @@
             <span><kbd>M</kbd> MUSIK</span>
             <span><kbd>C</kbd> C64</span>
             <span><kbd>G</kbd> GEIST</span>
+            <span><kbd>P</kbd> FOTO</span>
             <span>GAMEPAD OK</span>
           </div>
         </div>
@@ -63,7 +66,9 @@
           <p class="eyebrow">KURZE VERSCHNAUFPAUSE</p>
           <h2>PAUSE</h2>
           <button id="resumeBtn" class="primary-btn">WEITERSPIELEN</button>
+          <button id="photoBtn" class="secondary-btn">FOTOMODUS</button>
           <button class="secondary-btn c64-toggle">C64-MODUS: AUS</button>
+          <button class="secondary-btn kids-toggle">KINDER-MODUS: AUS</button>
           <button id="restartBtn" class="text-btn">ZUM CHECKPOINT</button>
           <button class="text-btn to-title">ZUM TITELBILDSCHIRM</button>
         </div>
@@ -78,6 +83,7 @@
           <p id="winBest" class="win-best"></p>
           <button id="nextBtn" class="primary-btn hidden">WEITER: KAPITEL 2 <span>→</span></button>
           <button class="secondary-btn open-shop">ZUM EICHHÖRNCHEN-LADEN</button>
+          <button class="secondary-btn open-album">STICKER-ALBUM</button>
           <button id="againBtn" class="text-btn">NOCHMAL SPIELEN</button>
           <button class="text-btn to-title">ZUM TITELBILDSCHIRM</button>
         </div>
@@ -98,6 +104,24 @@
         </div>
       </div>
 
+      <div id="albumScreen" class="screen compact hidden">
+        <div class="panel album-panel">
+          <p class="eyebrow">STICKER-ALBUM</p>
+          <h2 id="albumCount">0 / 26 STICKER</h2>
+          <div id="albumGrid" class="album-grid"></div>
+          <button id="albumClose" class="primary-btn">ZURÜCK</button>
+        </div>
+      </div>
+
+      <div id="photoBar" class="photo-bar hidden">
+        <strong>FOTOMODUS</strong>
+        <span>← → KAMERA · F FILTER · R RAHMEN · ENTER FOTO · P ZURÜCK</span>
+        <span id="photoInfo"></span>
+        <button id="photoSave" class="secondary-btn">FOTO SPEICHERN</button>
+        <button id="photoExit" class="secondary-btn">ZURÜCK</button>
+      </div>
+      <div id="stickerPop" class="sticker-pop hidden"></div>
+
       <div id="c64Load" class="screen c64-load hidden"><pre id="c64Text"></pre></div>
 
       <button id="pauseBtn" class="pause-btn hidden" aria-label="Spiel pausieren">Ⅱ</button>
@@ -112,8 +136,9 @@
         <button id="jumpBtn" class="jump" aria-label="Springen">↑</button>
       </div>
     </section>
-    <footer><span id="zoneName">LEVEL 01 · NACHTPARK</span><span>S · STAMPFEN &nbsp; F · EISBÄR &nbsp; M · MUSIK &nbsp; C · C64 &nbsp; ESC · PAUSE</span></footer>
+    <footer><span id="zoneName">LEVEL 01 · NACHTPARK</span><span>S · STAMPFEN &nbsp; F · EISBÄR &nbsp; P · FOTO &nbsp; M · MUSIK &nbsp; C · C64 &nbsp; ESC · PAUSE</span></footer>
   </main>
+  <script src="js/assets.js"></script>
   <script src="js/levels.js"></script>
   <script src="js/music.js"></script>
   <script src="js/jump.js"></script>

@@ -19,6 +19,7 @@ Danach `http://localhost:8000` im Browser öffnen.
 - `S` oder Pfeil runter in der Luft: **Stampf-Attacke** (befreundet Gegner im Umkreis, auf Trampolinen: Super-Boing)
 - `S` vor einem Rausch-Fernseher: hineinsteigen
 - `F` oder `X`: Stofftier-Eisbär werfen
+- `P`: Fotomodus (←/→ Kamera, `F` Filter, `R` Rahmen, `Enter` speichert ein PNG)
 - `M`: Musik an/aus · `C`: C64-Modus · `G`: Geisterläufer an/aus · `Esc`: Pause
 - **Gamepad**: Stick/Steuerkreuz laufen, A springen, X/B werfen, runter stampfen, Start pausiert
 
@@ -30,9 +31,11 @@ Auf Touch-Geräten gibt es Bildschirmtasten inklusive `↓` zum Stampfen.
 2. **Das verschwundene Ei**: Rheinufer, Kirmes, Baustelle, Bosskampf gegen den großen Bären, danach schlüpft der Baby-Dino.
 3. **Die Lahn hinauf**: Weinberge mit Seilbahn, Kneipenviertel, Burg Lahneck. Der Baby-Dino läuft mit und sammelt Münzen.
 4. **Serverraum**: Rechenzentrum, Kühlgang mit Lüfter-Aufwind, Kabelsalat voller Bugs, die sich vermehren, Finale gegen den DAU-Drachen.
+5. **Der Kuchen-Klau**: Verfolgungsjagd mit Autoscroll über die B42, durch den Tunnel und über die Brücke, immer dem Kuchen-Lieferwagen nach.
+6. **Disko-Nacht**: Plattformen und Laser schalten im Takt der Musik, am Ende legt der Kolkrabe am DJ-Pult auf.
 - **Bonus · Rauschen**: Geheimlevel hinter dem Fernseher, Berlin-School-Ambient, Münzen gehen direkt ins Laden-Konto.
 
-Kapitel werden nacheinander freigeschaltet. Zum Testen: `index.html#kapitel-4` (schaltet bis Kapitel 4 frei), `#spaet` erzwingt die Nachtschicht.
+Kapitel werden nacheinander freigeschaltet. Zum Testen: `index.html#kapitel-6` (schaltet alles frei), `#spaet` erzwingt die Nachtschicht.
 
 ## Was sonst noch drin ist
 
@@ -43,7 +46,11 @@ Kapitel werden nacheinander freigeschaltet. Zum Testen: `index.html#kapitel-4` (
 - **Nachtschicht**: Zwischen 22 und 5 Uhr wird das Spiel dunkler, Laternen und Fackeln leuchten stärker, und der Kolkrabe ist müde.
 - **C64-Modus**: Echte 16-Farben-Palette, dicke Pixel, Scanlines, SID-artiger Klang und LOAD-Bildschirm.
 - **Soundtrack**: 14 Chiptune-Stücke (`js/music.js`) auf einem eigenen WebAudio-Sequencer, ohne Audiodateien.
-- **Kolkrabe of Doom** landet an jedem Checkpoint und kommentiert.
+- **Kolkrabe of Doom** landet an jedem Checkpoint und kommentiert, was du in der Zone davor angestellt hast („ZWEIMAL INS WASSER. RESPEKT.“).
+- **Freunde helfen mit**: Wer eine Tierart schon einmal befreundet hat, bekommt später Hilfe. Der Fuchs zeigt versteckte Münzen, Nilpferde bilden eine Brücke, die Giraffe reicht ein Herz herunter, der Bär macht Räuberleiter. Im Drachenkampf kommt der große Bär zu Hilfe.
+- **Wetter**: Regen mit Pfützenglanz, Herbstlaub, Schnee, Funkenflug, Konfetti, Glühwürmchen.
+- **Sticker-Album** mit 26 Stickern, **Fotomodus** mit Sepia/Noir/Nacht/C64-Filter und CRT- oder Polaroid-Rahmen.
+- **Kinder-Modus**: zwei Herzen mehr, langsamere Gegner, schwächere Bosse, Abstürze kosten nichts, Disko-Plattformen bleiben stehen.
 
 ## Level-Editor
 
@@ -57,6 +64,9 @@ Material, Lücken). **TESTSPIELEN** startet das Level direkt im Spiel, im Menü 
     python tools/make_backdrops.py   # Hintergründe
     python tools/make_kolkrabe.py    # Kolkrabe
     python tools/make_sprites.py     # Baby-Dino, Eichhörnchen, Bug, DAU-Drache
+    python tools/make_assets.py      # bettet alle Spielgrafiken in js/assets.js ein (danach immer ausführen)
+
+Durch das Einbetten funktionieren C64-Modus und Fotomodus auch, wenn `index.html` direkt aus dem Ordner geöffnet wird.
 
 ## Ordner
 

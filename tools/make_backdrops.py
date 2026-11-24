@@ -415,6 +415,71 @@ def rauschen():
     finish(img, "backdrop-rauschen.png")
 
 
+# ---------------------------------------------------------------- Tunnel
+def tunnel():
+    img = Image.new("RGB", (W, H))
+    d = ImageDraw.Draw(img)
+    d.rectangle([0, 0, W, H], fill=(14, 12, 22))
+    for y in range(0, 150, 2):  # gewölbte Tunnelwand mit Fliesen
+        shade = 24 + int(18 * math.sin(y / 150 * math.pi))
+        d.line([(0, y), (W, y)], fill=(shade, shade - 4, shade + 10))
+    for y in range(8, 140, 10):
+        for x in range((y // 10 % 2) * 8, W, 16):
+            d.rectangle([x, y, x + 14, y + 8], outline=(46, 42, 60))
+    for x in range(0, W, 40):  # Deckenlampen
+        d.rectangle([x + 10, 6, x + 30, 9], fill=(255, 196, 90))
+        for k in range(1, 26):
+            if (x + k) % 2 == 0:
+                d.point((x + 20 + (k % 5) - 2, 9 + k), fill=(90, 70, 40))
+    for x in range(0, W, 80):  # Notausgang-Schilder
+        d.rectangle([x + 50, 70, x + 64, 77], fill=(30, 160, 90))
+        d.rectangle([x + 52, 72, x + 55, 75], fill=(230, 255, 230))
+    for x in range(0, W, 26):  # Leitplanke
+        d.rectangle([x, 128, x + 22, 132], fill=(150, 150, 166))
+        d.rectangle([x + 10, 132, x + 12, 150], fill=(90, 90, 104))
+    d.rectangle([0, 150, W, H], fill=(20, 18, 28))
+    finish(img, "backdrop-tunnel.png")
+
+
+# ---------------------------------------------------------------- Disko
+def disko():
+    img = Image.new("RGB", (W, H))
+    d = ImageDraw.Draw(img)
+    for y in range(H):
+        c = (22 + y // 12, 6, 40 + y // 6)
+        d.line([(0, y), (W, y)], fill=c)
+    beams = [(255, 60, 160), (60, 220, 255), (255, 220, 60), (150, 255, 90)]
+    for i, bx in enumerate((40, 120, 200, 280)):  # Lichtkegel
+        col = beams[i]
+        for y in range(10, 150):
+            spread = (y - 10) // 4
+            for x in range(bx - spread, bx + spread + 1, 3):
+                if (x + y) % 3 == 0:
+                    d.point((x % W, y), fill=tuple(int(v * .45) for v in col))
+    cx, cy = 160, 28  # Spiegelkugel
+    d.line([(cx, 0), (cx, cy - 12)], fill=(120, 120, 140))
+    d.ellipse([cx - 12, cy - 12, cx + 12, cy + 12], fill=(170, 170, 190))
+    for y in range(cy - 12, cy + 12, 3):
+        for x in range(cx - 12, cx + 12, 3):
+            if (x - cx) ** 2 + (y - cy) ** 2 < 140:
+                d.point((x, y), fill=(240, 240, 255) if (x + y) % 2 else (90, 90, 120))
+    rnd = random.Random(77)
+    for _ in range(60):  # Lichtpunkte der Kugel
+        x, y = rnd.randrange(W), rnd.randrange(130)
+        d.point((x, y), fill=rnd.choice(beams))
+    for sx in (6, 290):  # Boxentürme
+        d.rectangle([sx, 70, sx + 24, 150], fill=(16, 10, 22))
+        for k, yy in enumerate((80, 104, 128)):
+            d.ellipse([sx + 4, yy, sx + 20, yy + 16], fill=(40, 30, 52))
+            d.ellipse([sx + 9, yy + 5, sx + 15, yy + 11], fill=(10, 6, 14))
+    for x in range(0, W, 7):  # tanzende Menge
+        h = 10 + (x * 13 % 9)
+        d.rectangle([x, 150 - h, x + 4, 150], fill=(10, 4, 18))
+        d.ellipse([x, 146 - h - 4, x + 4, 150 - h], fill=(10, 4, 18))
+    d.rectangle([0, 150, W, H], fill=(12, 4, 20))
+    finish(img, "backdrop-disko.png")
+
+
 if __name__ == "__main__":
     rheinufer()
     kirmes()
@@ -424,3 +489,5 @@ if __name__ == "__main__":
     burg()
     serverraum()
     rauschen()
+    tunnel()
+    disko()
