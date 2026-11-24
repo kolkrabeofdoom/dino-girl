@@ -946,18 +946,23 @@
   const cmap=new Int8Array(1<<18).fill(-1);
   function nearest(r,g,b){const k=((r>>2)<<12)|((g>>2)<<6)|(b>>2);let v=cmap[k];if(v>=0)return v;let best=0,bd=1e9;
     for(let i=0;i<16;i++){const c=C64PAL[i],dr=r-c[0],dg=g-c[1],db=b-c[2],d=dr*dr*.3+dg*dg*.59+db*db*.11;if(d<bd){bd=d;best=i}}cmap[k]=best;return best}
+  let c64Soft=false;
   function post(){
     if(!c64)return;
     lctx.imageSmoothingEnabled=true;lctx.drawImage(canvas,0,0,320,180);
-    const d=lctx.getImageData(0,0,320,180),a=d.data;
+    let d=null;
+    // Aus dem Dateisystem (file://) darf der Browser keine Pixel auslesen: dann nur dicke Pixel plus CSS-Farbfilter
+    if(!c64Soft){try{d=lctx.getImageData(0,0,320,180)}catch(e){c64Soft=true;canvas.classList.add("c64-soft");toast("C64-FARBEN KOMPLETT NUR ÜBER SERVER.PY")}}
+    if(!d){ctx.setTransform(1,0,0,1,0,0);ctx.imageSmoothingEnabled=false;ctx.drawImage(lo,0,0,canvas.width,canvas.height);return}
+    const a=d.data;
     for(let i=0;i<a.length;i+=4){const c=C64PAL[nearest(a[i],a[i+1],a[i+2])];a[i]=c[0];a[i+1]=c[1];a[i+2]=c[2]}
     lctx.putImageData(d,0,0);ctx.setTransform(1,0,0,1,0,0);ctx.imageSmoothingEnabled=false;ctx.drawImage(lo,0,0,canvas.width,canvas.height);
   }
   function setC64(on,animate=true){
-    c64=on;progress.c64=on;save();document.body.classList.toggle("c64",on);music.setSid(on);
+    c64=on;progress.c64=on;save();document.body.classList.toggle("c64",on);if(!on)canvas.classList.remove("c64-soft");else if(c64Soft)canvas.classList.add("c64-soft");music.setSid(on);
     document.querySelectorAll(".c64-toggle").forEach(b=>b.textContent=on?"C64-MODUS: AN":"C64-MODUS: AUS");
     if(on&&animate)c64Boot();
-    if(!running)draw();
+    if(!running){try{draw()}catch(e){console.error(e)}}
   }
   function c64Boot(){
     const lines=["    **** COMMODORE 64 BASIC V2 ****",""," 64K RAM SYSTEM  38911 BASIC BYTES FREE","","READY.",'LOAD"DINO",8,1',"","SEARCHING FOR DINO","LOADING","READY.","RUN"];
@@ -966,10 +971,15 @@
   }
 
   // ================================================================ Schleife
+  let loopErrors=0;
   function loop(now){
     if(!running)return;const dt=Math.min(.033,(now-last)/1000||0);last=now;
-    if(mode==="cutscene"&&cut)updateCut(dt);else if(!paused&&mode==="play")physics(dt);
-    if(running||mode==="won")draw();
+    // Ein Fehler darf nie die ganze Schleife anhalten: protokollieren und weiterlaufen
+    try{
+      if(mode==="cutscene"&&!cut)finishWin();
+      if(mode==="cutscene"&&cut)updateCut(dt);else if(!paused&&mode==="play")physics(dt);
+      if(running||mode==="won")draw();
+    }catch(e){console.error(e);if(++loopErrors===1)toast("HOPPLA, KLEINER FEHLER. SPIEL LÄUFT WEITER.")}
     if(running)rafId=requestAnimationFrame(loop);
   }
 
