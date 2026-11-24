@@ -138,7 +138,6 @@ js/assets.js              eingebettete Spielgrafiken (automatisch erzeugt)
 js/editor.js              Logik des Editors
 img/                      Grafiken
 tools/                    Python-Skripte, die Pixelgrafiken erzeugen
-public/, app/, worker/    Fassung für das Web-Hosting
 source-assets/            ursprüngliche Referenz- und Spritegrafiken
 ```
 
